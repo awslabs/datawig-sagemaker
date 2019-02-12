@@ -1,0 +1,147 @@
+#!/usr/bin/python36
+
+#  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License").
+#  You may not use this file except in compliance with the License.
+#  A copy of the License is located at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  or in the "license" file accompanying this file. This file is distributed
+#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#  express or implied. See the License for the specific language governing
+#  permissions and limitations under the License.
+
+from __future__ import print_function
+
+import glob
+import json
+import os
+import sys
+import traceback
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score
+
+import pandas as pd
+from datawig import SimpleImputer
+
+prefix = '/opt/ml'
+
+input_path = os.path.join(prefix, 'input/data')
+output_path = os.path.join(prefix, 'output')
+model_path = os.path.join(prefix, 'model')
+param_path = os.path.join(prefix, 'input/config/hyperparameters.json')
+
+
+train_name = 'train'
+test_name = 'test'
+training_path = os.path.join(input_path, train_name)
+testing_path = os.path.join(input_path, test_name)
+
+
+def create_configuration():
+    for l in os.listdir(prefix):
+        print('path: ' + l)
+    with open(param_path, 'r') as params:
+        hp = json.load(params)
+
+    config = {
+        "feature_columns" : [x.strip() for x in hp['feature_columns'].split(',')],
+        "label_column": hp['label_column'],
+        "num_epochs": int(hp.get('num_epochs', 100)),
+        "batch_size": int(hp.get('batch_size', 128))
+    }
+
+    return config
+
+
+def train_model(config):
+    feature_names = config['feature_columns']
+    label_column = config['label_column']
+    num_epochs = config['num_epochs']
+    batch_size = config['batch_size']
+
+    required_cols = feature_names + [label_column]
+
+    print('test path (ignored, using split from train data)', testing_path)
+
+    # Take the set of files and read them all into a single pandas dataframe
+    input_files = [os.path.join(training_path, file) for file in os.listdir(training_path)]
+    if len(input_files) == 0:
+        raise ValueError(("""There are no files in {}.
+                             This usually indicates that the channel ({}) was incorrectly specified,
+                             the data specification in S3 was incorrectly specified or the role specified
+                             does not have permission to access the data.""").format(training_path, train_name))
+
+    raw_data = [pd.read_csv(file, usecols=required_cols, error_bad_lines=False, quoting=3) for file in input_files]
+    train_data = pd.concat(raw_data).astype(str)
+    print("Actual columns: " + str(train_data.columns))
+
+    # concat input columns
+    concat_feature_col_name = '_concat'
+    string_concat_col = pd.Series(index=train_data.index, data='')
+    for col in feature_names:
+        string_concat_col += train_data[col].fillna("") + " "
+    train_data.loc[:, concat_feature_col_name] = string_concat_col
+    print(train_data.head())
+
+    imputer = SimpleImputer(
+        input_columns=[concat_feature_col_name],
+        output_column=label_column,
+        is_explainable=True,
+        output_path=model_path
+    )
+
+    hps = dict()
+    hps[concat_feature_col_name] = {
+        'max_tokens': [2 ** x for x in range(10, 18)],
+        'tokens': [['words'], ['chars']]
+    }
+    hps['global'] = {}
+    hps['global']['num_epochs'] = [num_epochs]
+    hps['global']['batch_size'] = [batch_size]
+
+    imputer.fit_hpo(
+        train_data,
+        hps=hps,
+        num_evals=25
+    )
+
+    print(imputer.output_path)
+    print(imputer.hpo.results.columns)
+    print(
+        imputer.hpo.results[
+            [concat_feature_col_name + ':max_tokens', concat_feature_col_name + ':tokens', 'precision_weighted']
+        ]
+    )
+    print(imputer.hpo.results.shape)
+    print([encoder.vectorizer for encoder in imputer.imputer.data_encoders])
+
+    imputer.hpo.results.to_csv(os.path.join(output_path, "hpo_results.csv"), index=False)
+
+
+def train():
+    print('Starting train')
+
+    config = create_configuration()
+    train_model(config)
+    
+    print('Training complete')
+
+
+if __name__ == "__main__":
+    try:
+        train()
+    except Exception as e:
+        trc = traceback.format_exc()
+        with open(os.path.join(output_path, 'failure'), 'w') as f:
+            f.write('Exception during train: ' + str(e) + '\n' + trc)
+        # Add the exception to the train job logs
+        print('Exception during train: ' + str(e)+ '\n' + trc, file=sys.stderr)
+        # A non-zero exit code causes the train job to be marked as Failed.
+        sys.exit(255)
+
+    # A zero exit code causes the job to be marked a Succeeded.
+    sys.exit(0)

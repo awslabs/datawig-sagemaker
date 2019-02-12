@@ -1,0 +1,5 @@
+{
+    "feature_columns": "review",
+    "label_column": "rating_binary",
+    "num_epochs": 10
+}
