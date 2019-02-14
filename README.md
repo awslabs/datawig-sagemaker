@@ -13,6 +13,7 @@ The following stack is used:
 * __Dockerfile__.
 
 * __build\_and\_push.sh__: The script to build the Docker image (using the Dockerfile above) and push it to the [Amazon EC2 Container Registry (ECR)][ecr] so that it can be deployed to SageMaker. Name of the image is used as the only argument to this script. The script will generate a full name for the repository in AWS account account and configured AWS region. If this ECR repository doesn't exist, the script will create it.
+  * As part of this script you can set the desired DataWig version to be installed inside the Docker image. Check our [PyPI repository][pypi] for the latest version.
 
 * __imputation__: The directory that contains the application to run in the container.
 
@@ -91,3 +92,4 @@ This library is licensed under the Apache 2.0 License.
 [datawig]: https://github.com/awslabs/datawig
 [asm]: https://github.com/awslabs/amazon-sagemaker-examples/tree/master/advanced_functionality
 [imdb]: https://dl.acm.org/citation.cfm?id=2002491
+[pypi]: https://pypi.org/project/datawig
