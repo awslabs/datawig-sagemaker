@@ -19,7 +19,7 @@ import pandas as pd
 import sagemaker
 
 ALGORITHM_NAME = "datawig"
-S3_BUCKET = "datawig-sagemaker"
+S3_BUCKET = "Specify S3 bucket here"
 # if the script is used outside of SageMaker roles must be set,
 # alternatively if the script is used from a SageMaker Notebook then sagemaker.get_execution_role() can be used to get the role
 ROLE = "Specify the role here"

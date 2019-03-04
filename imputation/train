@@ -96,17 +96,17 @@ def train_model(config):
 
     hps = dict()
     hps[concat_feature_col_name] = {
-        'max_tokens': [2 ** x for x in range(10, 18)],
+        'max_tokens': [2 ** x for x in range(10, 20)],
         'tokens': [['words'], ['chars']]
     }
-    hps['global'] = {}
-    hps['global']['num_epochs'] = [num_epochs]
-    hps['global']['batch_size'] = [batch_size]
 
     imputer.fit_hpo(
         train_data,
         hps=hps,
-        num_evals=25
+        num_evals=25,
+        weight_decay=[0],
+        learning_rate_candidates=[4e-3],
+        patience=3
     )
 
     print(imputer.output_path)
@@ -114,12 +114,12 @@ def train_model(config):
     print(
         imputer.hpo.results[
             [concat_feature_col_name + ':max_tokens', concat_feature_col_name + ':tokens', 'precision_weighted']
-        ]
+        ].sort_values('precision_weighted')
     )
     print(imputer.hpo.results.shape)
     print([encoder.vectorizer for encoder in imputer.imputer.data_encoders])
 
-    imputer.hpo.results.to_csv(os.path.join(output_path, "hpo_results.csv"), index=False)
+    # imputer.hpo.results.to_csv(os.path.join(output_path, "_hpo_results.csv"), index=False)
 
 
 def train():

@@ -30,8 +30,9 @@ RUN /usr/bin/pip-3.6 install flask gevent gunicorn
 RUN /usr/bin/pip-3.6 install ipython
 
 RUN yum install -y git
+
 ARG datawig_version
-RUN /usr/bin/pip-3.6 install datawig==$datawig_version
+RUN if [[ -n "$datawig_version" ]]; then /usr/bin/pip-3.6 install datawig==$datawig_version; else /usr/bin/pip-3.6 install datawig; fi
 
 # PYTHONUNBUFFERED keeps Python from buffering our standard
 # output stream, which means that logs can be delivered to the user quickly
