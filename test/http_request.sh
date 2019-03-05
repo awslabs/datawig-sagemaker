@@ -19,7 +19,7 @@ set -e
 
 while [ `docker ps -q | wc -l` -lt 1 ]
 do
-    echo "Waiting for SageMaker serve to boot"
+    echo "Waiting for SageMaker server to start"
     sleep 1
 done
 
