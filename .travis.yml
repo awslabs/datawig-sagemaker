@@ -8,10 +8,8 @@ services:
 before_install:
   - docker build -t datawig-sagemaker .
   - docker images
-#  - docker run
-#  - docker ps -a
 
 script:
   - ./test/train_local.sh datawig-sagemaker
-  - ./test/serve_local.sh datawig-sagemaker & sleep 10 && ./test/http_request.sh
+  - ./test/serve_local.sh datawig-sagemaker & ./test/http_request.sh
   - docker stop $(docker ps -aq)

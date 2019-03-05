@@ -17,7 +17,11 @@ source $(dirname $0)/common.sh
 
 set -e
 
-payload=$1
+while [ `docker ps -q | wc -l` -lt 1 ]
+do
+    echo "Waiting for SageMaker serve to boot"
+    sleep 1
+done
 
 curl -v http://localhost:${SAGEMAKER_HTTP_PORT}/ping
 
