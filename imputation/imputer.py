@@ -124,7 +124,9 @@ def transformation():
         explanations = []
         for idx in range(data.shape[0]):
             expl = ImputationService.explain_instance(data.iloc[idx])
+
             k = next(k for k in expl.keys() if k != "explained_label")
+
             # top 3 positive covar tokens and only the token
             expl["tokens"] = [e[0] for e in expl.pop(k) if e[1] > 0][:3]
             explanations.append(expl)

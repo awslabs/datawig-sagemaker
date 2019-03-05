@@ -75,7 +75,7 @@ def train_model(config):
                              the data specification in S3 was incorrectly specified or the role specified
                              does not have permission to access the data.""").format(training_path, train_name))
 
-    raw_data = [pd.read_csv(file, usecols=required_cols, error_bad_lines=False, quoting=3) for file in input_files]
+    raw_data = [pd.read_csv(file, usecols=required_cols, error_bad_lines=False) for file in input_files]
     train_data = pd.concat(raw_data).astype(str)
     print("Actual columns: " + str(train_data.columns))
 
@@ -96,17 +96,17 @@ def train_model(config):
 
     hps = dict()
     hps[concat_feature_col_name] = {
-        'max_tokens': [2 ** x for x in range(10, 18)],
+        'max_tokens': [2 ** x for x in range(10, 20)],
         'tokens': [['words'], ['chars']]
     }
-    hps['global'] = {}
-    hps['global']['num_epochs'] = [num_epochs]
-    hps['global']['batch_size'] = [batch_size]
 
     imputer.fit_hpo(
         train_data,
         hps=hps,
-        num_evals=25
+        num_evals=25,
+        weight_decay=[0],
+        learning_rate_candidates=[4e-3],
+        patience=3
     )
 
     print(imputer.output_path)
@@ -114,12 +114,12 @@ def train_model(config):
     print(
         imputer.hpo.results[
             [concat_feature_col_name + ':max_tokens', concat_feature_col_name + ':tokens', 'precision_weighted']
-        ]
+        ].sort_values('precision_weighted')
     )
     print(imputer.hpo.results.shape)
     print([encoder.vectorizer for encoder in imputer.imputer.data_encoders])
 
-    imputer.hpo.results.to_csv(os.path.join(output_path, "hpo_results.csv"), index=False)
+    # imputer.hpo.results.to_csv(os.path.join(output_path, "_hpo_results.csv"), index=False)
 
 
 def train():

@@ -1,0 +1,15 @@
+language: python
+python:
+- '3.6'
+
+services:
+  - docker
+
+before_install:
+  - docker build -t datawig-sagemaker .
+  - docker images
+
+script:
+  - ./test/train_local.sh datawig-sagemaker
+  - ./test/serve_local.sh datawig-sagemaker & ./test/http_request.sh
+  - docker stop $(docker ps -aq)

@@ -1,5 +1,9 @@
 # DataWig on SageMaker
 
+[![GitHub license](https://img.shields.io/github/license/awslabs/datawig-sagemaker.svg)](https://github.com/awslabs/datawig-sagemaker/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/awslabs/datawig-sagemaker.svg)](https://github.com/awslabs/datawig-sagemaker/issues)
+[![Build Status](https://travis-ci.org/awslabs/datawig-sagemaker.svg?branch=master)](https://travis-ci.org/awslabs/datawig-sagemaker)
+
 This packages shows how to package __[DataWig][datawig]__ imputation algorithm for use with SageMaker. The code and structure of the package are heavily influenced by examples from the __[Amazon-SageMaker-Examples][asm]__ repository.
 
 The following stack is used:
