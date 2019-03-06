@@ -22,7 +22,7 @@ set -x
 image=$1
 
 # which official release of datawig to install
-datawig_version=0.1.8
+datawig_version=0.1.9
 
 if [ "$image" == "" ]
 then
