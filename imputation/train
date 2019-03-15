@@ -96,7 +96,7 @@ def train_model(config):
 
     hps = dict()
     hps[concat_feature_col_name] = {
-        'max_tokens': [2 ** x for x in range(10, 20)],
+        'max_tokens': [2 ** x for x in range(12, 20)],
         'tokens': [['words']]
     }
 

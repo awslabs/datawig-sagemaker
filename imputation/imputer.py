@@ -48,7 +48,7 @@ class ImputationService(object):
         return imputer.predict(input)
 
     @classmethod
-    def impute_top_k(cls, input, k=2):
+    def impute_top_k(cls, input, k=5):
         imputer = cls.get_imputer()
         # actual Imputer inside SimpleImputer
         return imputer.imputer.predict_proba_top_k(input, top_k=k)
@@ -119,7 +119,7 @@ def transformation():
 
     elif flask.request.content_type == 'application/json':
         data = ImputationService.request_data_frame(flask.request.data.decode('utf-8'))
-        predictions = ImputationService.impute_top_k(data)
+        predictions = ImputationService.impute_top_k(data, k=5)
         label_col = ImputationService.imputer.output_column
         explanations = []
         for idx in range(data.shape[0]):
