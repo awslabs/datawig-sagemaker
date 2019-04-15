@@ -85,7 +85,6 @@ def train_model(config):
     for col in feature_names:
         string_concat_col += train_data[col].fillna("") + " "
     train_data.loc[:, concat_feature_col_name] = string_concat_col
-    print(train_data.head())
 
     imputer = SimpleImputer(
         input_columns=[concat_feature_col_name],
