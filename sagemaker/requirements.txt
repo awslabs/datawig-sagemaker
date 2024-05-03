@@ -1,2 +1,2 @@
-sagemaker==1.11.2
+sagemaker==2.218.0
 pandas==0.22.0
